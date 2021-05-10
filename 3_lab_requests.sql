@@ -1,17 +1,17 @@
 use cinema;
 
-#Изменить времся сессии с индексом 1
+SET SQL_SAFE_UPDATES = 0;
+SET foreign_key_checks = 0;
+
+#Изменить формат сессии с индексом 1
 UPDATE sessions
-SET Time = '16:00'
+SET Format = "IMAX"
 WHERE Id_session = 1;
 
 #Изменить имя у сотрудника с индексом 9
 UPDATE employees
 SET Fullname = 'Сухова Алина'
 WHERE Id_employee = 9;
-
-SET SQL_SAFE_UPDATES = 0;
-SET foreign_key_checks = 0;
 
 #Изменить имя актера у фильма Властелин колец: Братство Кольца
 UPDATE films
@@ -48,4 +48,92 @@ DELETE FROM places WHERE Id_places = 10 AND Place_№ = 10 AND Line_№ = 3;
 
 #Удалить билет с Id_session = 10 и id_place = 10;
 DELETE FROM tickets WHERE Id_session = 10 AND id_place = 10;
+
+
+#Вывод сеансов формата 2D
+SELECT * FROM sessions
+WHERE Format = '2D';
+
+#Вывод фильмов с жанром мелодрама 
+SELECT * FROM films
+WHERE Genre = 'мелодрама';
+
+#Вывод забронированных билетов
+SELECT * FROM tickets
+WHERE Reservation = 'true';
+
+#Вывод холов имеющих размер
+SELECT * FROM halls
+WHERE Size IS NOT NULL;
+
+#Вывод холов не имеющих размер
+SELECT * FROM halls
+WHERE Size IS NULL;
+
+#Вывод всех фильмов в заданном промежутке рейтинга
+SELECT * FROM films
+WHERE Rating BETWEEN 7 AND 9;
+
+#Вывод сотрудников с заданным именем
+SELECT Fullname, Shedule, Qualification
+FROM employees
+WHERE Fullname = 'Ширяев Иван';
+
+#Вывод сессий вормата 3D или IMAX
+SELECT * FROM sessions
+WHERE Format = '3D' OR Format = 'IMAX'; 
+
+#Вывести холы с заданным айди кинотеатра
+SELECT * FROM halls
+WHERE Id_cinema = 2;
+
+#Вывести сотрудников с заданным айди кинотеатра
+SELECT Fullname, Shedule, Qualification
+FROM employees
+WHERE Id_cinema = 1;
+
+#Вывести фильмы длиной от 0 до 120 и от 150 до бесконечности 
+SELECT * FROM films
+WHERE NOT Length BETWEEN 120 and 150;
+
+#Вывести цену сектора хола со значениями 150 и 200
+SELECT sec.price, sec.Id_hall_sectors
+FROM hall_sectors as sec
+WHERE price IN(150, 200);
+
+#Вывести сеансы с временем 18:00 и 16:00
+SELECT * FROM sessions
+WHERE time = "16:00:00" OR time = "18:00:00";
+
+#Вывести сеансы с временем 18:00 и форматом 2D
+SELECT * FROM sessions
+WHERE time = "16:00:00" AND Format = "2D";
+
+#Вывести неповторяющиеся жанры
+SELECT distinct genre
+FROM films;
+
+#Вывести фильмы компании warner brothers 
+SELECT Name, Genre, Rating
+FROM films
+WHERE Film_company = "WB";
+
+#Вывести первые 5 кинотеатров в списке
+SELECT Name
+FROM cinemas
+WHERE Id_cinemas BETWEEN 1 AND 5;
+
+#Вывести все строки таблицы сотрудников
+SELECT * FROM employees;
+
+#Вывести всех сотрудников имеющие заданную должность
+SELECT Fullname, Qualification
+FROM employees
+WHERE Qualification = "Среднеквалифицированные";
+
+#Вывести холы с номером 1
+SELECT * FROM halls
+WHERE Number = 1;
+
+
 
