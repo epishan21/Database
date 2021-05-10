@@ -137,3 +137,33 @@ WHERE Number = 1;
 
 
 
+#Вывести все фильмы с рейтиногом 8.%
+SELECT * FROM films
+WHERE Rating LIKE '8.%';
+
+#Вывести все цены билетов, где нулейвой разрялд равен 1 
+SELECT * FROM hall_sectors
+WHERE price LIKE '1%';
+
+#Вывести кинотеатры, названия которых начинается с П
+SELECT * FROM cinemas
+WHERE Name LIKE 'П%';
+
+#Вывести длины фильмов, где нулейвой разрялд равен 1 
+SELECT * FROM films
+WHERE length LIKE '1%';
+
+#Вывести всех сотрудников у которых в графике 2 выходных
+SELECT Fullname
+FROM employees
+WHERE Shedule LIKE '%2';
+
+#Скопировать в новую таблицу фильсы с жанром драма
+INSERT drama_films(Id_drama_films, Lenth, Genre, Rating, Name, Actors, Directors, Description, Film_company)
+SELECT * FROM films
+WHERE Genre = 'драма';
+
+#Заполнить таблицу cleaners_to_halls
+INSERT INTO cleaners_to_halls(id_cleaner, id_hall, day_of_week_of_cleaning, time_of_cleaning)
+Values (1, 1, 'Среда', '8:00:00');
+
