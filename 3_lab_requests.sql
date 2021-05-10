@@ -167,3 +167,84 @@ WHERE Genre = 'драма';
 INSERT INTO cleaners_to_halls(id_cleaner, id_hall, day_of_week_of_cleaning, time_of_cleaning)
 Values (1, 1, 'Среда', '8:00:00');
 
+
+
+#Вывести кол-во работников в каждой квалификации
+SELECT Qualification, COUNT(Id_employee) AS count_employees
+FROM employees
+GROUP BY Qualification;
+ 
+#Вывести кол-во работников для каждого расписания
+SELECT Shedule, COUNT(Id_employee) AS count_employees
+FROM employees
+GROUP BY Shedule;
+ 
+#Вывести кол-во сеансов для каждого формата
+SELECT Format, COUNT(Id_session) AS count_sessions
+FROM sessions
+GROUP BY Format;
+
+#Вывести средний рейтинг для каждого жанра
+SELECT Genre, AVG(Rating) AS genre_rating
+FROM films
+GROUP BY Genre
+Order by genre_rating;
+ 
+#Вывести среднюю длину для каждого жанра
+SELECT Genre, AVG(Length) AS Genre_Lenth
+FROM films
+GROUP BY Genre
+Order by Genre_Lenth desc;
+ 
+#Вывести кол-во размеров зала 
+SELECT size, COUNT(size) AS count_halls
+FROM halls
+WHERE size IS NOT NULL
+GROUP BY size;
+
+#Вывести минимальную цену места в зале
+SELECT Id_hall, min(price) AS min_price
+FROM hall_sectors
+GROUP BY Id_hall;
+
+#Вывести максимальную цену места в зале
+SELECT Id_hall, max(price) AS max_price
+FROM hall_sectors
+GROUP BY Id_hall;
+
+#Вывести жанры имеюищие средний рейтинг большее 8
+SELECT Genre, AVG(Rating) AS genre_rating
+FROM films
+GROUP BY Genre
+HAVING genre_rating > 8;
+
+#Вывести кол-во забронированных и не забронированных билетов 
+SELECT reservation, COUNT(Id_tickets) AS count_tickets
+FROM tickets
+GROUP BY reservation;
+
+#Вывести кол-во залов у кинотеатров 
+SELECT Id_cinema, COUNT(id_hall) AS count_halls
+FROM halls
+GROUP BY Id_cinema;
+
+#Вывести кол-во цен у залов
+SELECT Id_hall, COUNT(price) AS count_price
+FROM hall_sectors
+GROUP BY Id_hall;
+
+#Вывести кол-во мест в ряду
+SELECT line_№, COUNT(place_№) AS count_places
+FROM places
+GROUP BY line_№;
+
+#Вывести кол-во работников кинотеатров
+SELECT Id_cinema, COUNT(Id_employee) AS count_employees
+FROM employees
+GROUP BY Id_cinema;
+
+ 
+
+
+
+
