@@ -243,8 +243,46 @@ SELECT Id_cinema, COUNT(Id_employee) AS count_employees
 FROM employees
 GROUP BY Id_cinema;
 
- 
 
 
+ #Вывод таблицы сотношения названий сеансов к дате их проведения
+SELECT Name as Name_film, Date as Date_film, Time as Time_film
+FROM sessions
+JOIN films ON sessions.Id_films = films.Id_films;
+
+ #Вывод таблицы сотношения названий кинотеатров к номерам залов 
+SELECT Name as Name_cinema, Number as Number_hall
+FROM halls
+Left JOIN cinemas ON halls.Id_hall = cinemas.Id_cinemas;
+-- JOIN(SELECT Name as Name_film, Date as Date_film, Time as Time_film FROM sessions) films ON sessions.Id_films = films.Id_films;
+
+ #Вывод таблицы сотношения названий кинотеатров к их работникам
+SELECT Name as Name_cinema, Fullname
+FROM employees
+JOIN cinemas ON employees.Id_cinema = cinemas.Id_cinemas;
 
 
+ #Вывод таблицы сотношения названий кинотеатров к их работникам
+SELECT Name as Name_cinema, Fullname
+FROM employees
+JOIN cinemas ON employees.Id_cinema = cinemas.Id_cinemas;
+
+ #Вывод таблицы сотношения билетов к секторам зала, их ценам 
+SELECT Id_tickets, Reservation, Id_session, Id_booth_employee, Price, Id_hall
+FROM tickets
+JOIN hall_sectors ON tickets.Id_tickets = hall_sectors.Id_hall_sectors;
+
+#Вывод таблицы сотношения билетов к местам
+SELECT Id_tickets, Place_№, Line_№
+FROM tickets
+JOIN places ON tickets.Id_tickets = places.id_places;
+
+#Вывод таблицы сотношения билетов к 
+SELECT Id_tickets, Id_booth_employees
+FROM tickets
+JOIN(SELECT * FROM employees)booth_employees ON tickets.Id_tickets = booth_employees.Id_booth_employees
+JOIN(SELECT * FROM employees) cinemas ON employees.Id_cinema = cinemas.Id_cinemas;
+-- JOIN(SELECT * FROM booth_employees) employees ON employees.Id_employees = booth_employees.Id_booth_employees;
+
+SELECT * FROM sessions
+natural JOIN films;
