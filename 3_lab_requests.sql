@@ -158,15 +158,19 @@ SELECT Fullname
 FROM employees
 WHERE Shedule LIKE '%2';
 
-#Скопировать в новую таблицу фильсы с жанром драма
+#Скопировать в новую таблицу фильмы с жанром драма
 INSERT drama_films(Id_drama_films, Lenth, Genre, Rating, Name, Actors, Directors, Description, Film_company)
 SELECT * FROM films
 WHERE Genre = 'драма';
 
+#Скопировать в новую таблицу сессии с форматом 3D
+INSERT sessions_3D(Id_session_3D, Format, Date, Time, Id_film, Id_hall)
+SELECT * FROM sessions
+WHERE Format = '3D';
+
 #Заполнить таблицу cleaners_to_halls
 INSERT INTO cleaners_to_halls(id_cleaner, id_hall, day_of_week_of_cleaning, time_of_cleaning)
 Values (1, 1, 'Среда', '8:00:00');
-
 
 
 #Вывести кол-во работников в каждой квалификации
@@ -245,44 +249,94 @@ GROUP BY Id_cinema;
 
 
 
- #Вывод таблицы сотношения названий сеансов к дате их проведения
+#Вывод таблицы сотношения названий фильмов к дате их проведения
 SELECT Name as Name_film, Date as Date_film, Time as Time_film
 FROM sessions
 JOIN films ON sessions.Id_films = films.Id_films;
 
- #Вывод таблицы сотношения названий кинотеатров к номерам залов 
+#Вывод таблицы сотношения названий кинотеатров к номерам залов 
 SELECT Name as Name_cinema, Number as Number_hall
 FROM halls
-Left JOIN cinemas ON halls.Id_hall = cinemas.Id_cinemas;
--- JOIN(SELECT Name as Name_film, Date as Date_film, Time as Time_film FROM sessions) films ON sessions.Id_films = films.Id_films;
+Left JOIN cinemas ON halls.Id_cinema = cinemas.Id_cinemas;
 
- #Вывод таблицы сотношения названий кинотеатров к их работникам
+#Вывод таблицы сотношения названий кинотеатров к их работникам
 SELECT Name as Name_cinema, Fullname
 FROM employees
 JOIN cinemas ON employees.Id_cinema = cinemas.Id_cinemas;
 
-
- #Вывод таблицы сотношения названий кинотеатров к их работникам
-SELECT Name as Name_cinema, Fullname
-FROM employees
-JOIN cinemas ON employees.Id_cinema = cinemas.Id_cinemas;
-
- #Вывод таблицы сотношения билетов к секторам зала, их ценам 
-SELECT Id_tickets, Reservation, Id_session, Id_booth_employee, Price, Id_hall
+#Вывод таблицы сотношения билетов к сеансам и местам
+SELECT Id_tickets, Reservation, Date, time, Format, Place_№, Line_№
 FROM tickets
-JOIN hall_sectors ON tickets.Id_tickets = hall_sectors.Id_hall_sectors;
+JOIN places ON tickets.Id_place = places.Id_places
+JOIN sessions ON tickets.Id_session = sessions.Id_session;
 
-#Вывод таблицы сотношения билетов к местам
-SELECT Id_tickets, Place_№, Line_№
-FROM tickets
-JOIN places ON tickets.Id_tickets = places.id_places;
-
-#Вывод таблицы сотношения билетов к 
-SELECT Id_tickets, Id_booth_employees
-FROM tickets
-JOIN(SELECT * FROM employees)booth_employees ON tickets.Id_tickets = booth_employees.Id_booth_employees
-JOIN(SELECT * FROM employees) cinemas ON employees.Id_cinema = cinemas.Id_cinemas;
--- JOIN(SELECT * FROM booth_employees) employees ON employees.Id_employees = booth_employees.Id_booth_employees;
-
+#Вывод таблицы соотношения сеансов к фильмам
 SELECT * FROM sessions
 natural JOIN films;
+
+/*
+#Вывод таблицы сотношения работников билетных будок к будкам
+SELECT *
+FROM employees
+JOIN booth_employees ON employees.Id_employee = booth_employees.Id_booth_employees;
+
+-- JOIN (SELECT * FROM booth_employees) ticket_booths ON booth_employees.Id_booth = ticket_booths.Id_ticket_booths;
+
+
+#Вывод таблицы сотношения билетов к 
+SELECT * FROM tickets
+join booth_employees ON tickets.Id_booth_employee = booth_employees.Id_booth_employees
+JOIN employees ON booth_employees.Id_employee = employees.Id_employee;
+
+*/
+
+#Вывод таблицы сотношения секторов зала к залам
+SELECT *
+FROM hall_sectors
+right JOIN halls ON hall_sectors.Id_hall = halls.Id_hall;
+
+#Вывод таблицы сотношения залов к кинотеатрам
+SELECT Id_hall, Size, Number as Number_hall, Name as Name_cinema
+FROM halls
+JOIN cinemas ON halls.Id_cinema = cinemas.Id_cinemas;
+ 
+#Вывод таблицы сотношения сеансков к залам 
+SELECT Id_session, Date, Time, Format, Size, Number, Id_cinema
+FROM sessions
+JOIN halls ON sessions.Id_hall = sessions.Id_session;
+ 
+#Вывод таблицы сотношения мест к их стоимости
+SELECT Place_№, Line_№, Price 
+FROM places
+JOIN hall_sectors ON places.Id_sector = hall_sectors.Id_hall_sectors;
+ 
+#Вывод таблицы сотношения работников кассы к кассам
+SELECT Number as Number_booth, Fullname, Shedule, Qualification
+FROM booth_employees
+JOIN employees ON booth_employees.Id_booth_employees = employees.Id_employee
+JOIN ticket_booths ON booth_employees.Id_booth = ticket_booths.Id_ticket_booths;
+ 
+#Вывод таблицы сотношения билетов к работникам кассы которые их продали 
+SELECT Id_tickets, Fullname, number as Number_booth, Name as Name_cinema
+FROM tickets
+JOIN booth_employees ON tickets.Id_booth_employee = booth_employees.Id_booth_employees
+JOIN employees ON booth_employees.Id_booth_employees = employees.Id_employee
+JOIN ticket_booths ON booth_employees.Id_booth = ticket_booths.Id_ticket_booths
+JOIN cinemas ON employees.Id_cinema = cinemas.Id_cinemas;
+
+#Вывод таблицы сотношения работников кассы к работникам, кинотеатрам и номерам касс
+SELECT Fullname, Shedule, Qualification, number as Number_booth, Name as Name_cinema, address
+FROM booth_employees
+JOIN employees ON booth_employees.Id_booth_employees = employees.Id_employee
+JOIN ticket_booths ON booth_employees.Id_booth = ticket_booths.Id_ticket_booths
+JOIN cinemas ON employees.Id_cinema = cinemas.Id_cinemas;
+
+#Вывод таблицы сотношения залов к времени уборки к уборщикам
+SELECT Number as Number_hall, day_of_week_of_cleaning, time_of_cleaning, Fullname, Name as Name_cinema
+FROM halls
+JOIN cleaners_to_halls ON halls.id_hall= cleaners_to_halls.id_cleaner
+JOIN cleaners ON cleaners_to_halls.id_cleaner = cleaners.id_cleaner
+JOIN employees ON cleaners.Id_cleaner = employees.Id_employee
+JOIN cinemas ON employees.Id_cinema = cinemas.Id_cinemas;
+ 
+    
