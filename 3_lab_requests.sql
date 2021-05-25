@@ -1,3 +1,4 @@
+
 use cinema;
 
 SET SQL_SAFE_UPDATES = 0;
@@ -274,22 +275,6 @@ JOIN sessions ON tickets.Id_session = sessions.Id_session;
 SELECT * FROM sessions
 natural JOIN films;
 
-/*
-#Вывод таблицы сотношения работников билетных будок к будкам
-SELECT *
-FROM employees
-JOIN booth_employees ON employees.Id_employee = booth_employees.Id_booth_employees;
-
--- JOIN (SELECT * FROM booth_employees) ticket_booths ON booth_employees.Id_booth = ticket_booths.Id_ticket_booths;
-
-
-#Вывод таблицы сотношения билетов к 
-SELECT * FROM tickets
-join booth_employees ON tickets.Id_booth_employee = booth_employees.Id_booth_employees
-JOIN employees ON booth_employees.Id_employee = employees.Id_employee;
-
-*/
-
 #Вывод таблицы сотношения секторов зала к залам
 SELECT *
 FROM hall_sectors
@@ -338,5 +323,186 @@ JOIN cleaners_to_halls ON halls.id_hall= cleaners_to_halls.id_cleaner
 JOIN cleaners ON cleaners_to_halls.id_cleaner = cleaners.id_cleaner
 JOIN employees ON cleaners.Id_cleaner = employees.Id_employee
 JOIN cinemas ON employees.Id_cinema = cinemas.Id_cinemas;
- 
+
+
+#Вывести объединение работников и кинотеатров
+SELECT Fullname, 'работник'
+FROM employees
+UNION
+SELECT name, 'кинотеатр'
+FROM cinemas;
+
+
+#Вывести объединение места с ценой мест
+SELECT Fullname, 'работник кассы'
+FROM booth_employees
+JOIN employees ON booth_employees.Id_booth_employees = employees.Id_employee
+UNION
+SELECT Fullname, 'уборщик'
+FROM cleaners
+JOIN employees ON cleaners.Id_cleaner = employees.Id_employee;
     
+#Вывести объединение мест с ценой мест
+SELECT Place_№, 'номера места'
+FROM places
+UNION
+SELECT price, 'цена места'
+FROM hall_sectors;
+
+#Вывести самый большой рейтинг среди фильмов каждого жанра
+SELECT name, Genre, Rating
+FROM films f1
+where f1.Rating > ALL(
+       SELECT f2.Rating
+       FROM films f2
+       WHERE f2.Genre = f1.Genre
+       AND f2.id_films <> f1.Id_films
+       AND f2.Rating IS NOT NULL
+       );
+       
+#Вывести самый длиный фильм каждого жанра
+SELECT name, Genre, Length
+FROM films f1
+where f1.Length > ALL(
+       SELECT f2.Length
+       FROM films f2
+       WHERE f2.Genre = f1.Genre
+       AND f2.id_films <> f1.Id_films
+       AND f2.Length IS NOT NULL
+       );
+ 
+
+
+#Расчитать для ряда среднюю стоимость
+SELECT Line_№, avg(Price) as avg_price 
+FROM places
+JOIN hall_sectors ON places.Id_sector = hall_sectors.Id_hall_sectors
+group by line_№;
+ 
+
+
+#Транзакционные (задачи учета)
+#	Вывести список фильмов.
+SELECT * FROM films;
+
+#	Вывести список кинотеатров.
+SELECT * FROM cinemas;
+
+#	Вывести список сотрудников.
+SELECT * FROM employees;
+
+#	Добавить/Удалить фильм.
+INSERT INTO films(Id_films, Length, Genre, Rating, Name, Actors, Directors, Description, Film_company) VALUES
+(11, 150, 'Жанр', 8, 'Имя', 'Актер', 'Режиссер', 'Описание', 'Компния');
+DELETE FROM films WHERE Name = 'Имя';
+
+#	Добавить/Удалить сотрудника.
+INSERT INTO employees(Id_employee, Fullname, Shedule, Qualification, Id_cinema) VALUES
+(11, 'Имя', 1-1, 'Квалификация', 1);
+DELETE FROM employees WHERE Fullname = 'Имя';
+
+#	Задать жанр фильму.  
+UPDATE films
+SET Genre = 'триллер'
+WHERE Name = 'Пушки Акимбо';
+
+#Справочные (оперативные запросы)
+#	Показать все сеансы на фильм.
+SELECT Name as Name_film, Date as Date_film, Time as Time_film, Format
+FROM sessions
+JOIN films ON sessions.Id_films = films.Id_films
+WHERE name = 'Титаник';
+
+#	Показать рейтинги фильмов в прокате.
+SELECT Name as Name_film, rating, Date as Date_film
+FROM sessions
+JOIN films ON sessions.Id_films = films.Id_films;
+
+#	Показать секторы зала.
+SELECT * FROM hall_sectors;
+
+#	Показать всех сотрудников.
+SELECT Fullname FROM employees;
+
+#Справочные расчетные (аналитические запросы)
+#	Показать число проданных билетов с 14 декабря по 16 декабря.
+SELECT COUNT(Id_tickets) as count_tickets
+FROM tickets
+JOIN sessions ON tickets.Id_session = sessions.Id_session
+where date IN("2020-11-14", "2020-11-15", "2020-11-16");
+
+#	Показать количество билетов на сеансы 14 декабря.
+SELECT COUNT(Id_tickets) as count_tickets, Date, time
+FROM tickets
+JOIN sessions ON tickets.Id_session = sessions.Id_session
+GROUP BY time;
+
+#	Показать среднее цену билета, который покупали с 14 декабря по 16 декабря.
+SELECT  avg(price) as average_ticket_price
+FROM tickets
+JOIN sessions ON tickets.Id_session = sessions.Id_session
+JOIN places ON tickets.Id_place = places.Id_places
+JOIN hall_sectors ON places.Id_sector = hall_sectors.Id_hall_sectors
+where date IN("2020-11-14", "2020-11-15", "2020-11-16");
+
+#	Показать прибыль кинотеатра с 14 декабря по 18 декабря.
+SELECT sum(price) as cinema_profit
+FROM tickets
+JOIN sessions ON tickets.Id_session = sessions.Id_session
+JOIN places ON tickets.Id_place = places.Id_places
+JOIN hall_sectors ON places.Id_sector = hall_sectors.Id_hall_sectors
+where date IN("2020-11-14", "2020-11-15", "2020-11-16", "2020-11-17", "2020-11-18");
+
+#	Показать топ самых просматриваемых фильмов за 14, 15, 16, 17 и 18 декабря.
+SELECT COUNT(Id_tickets) as count_tickets, Name
+FROM tickets
+JOIN sessions ON tickets.Id_session = sessions.Id_session
+JOIN places ON tickets.Id_place = places.Id_places
+JOIN hall_sectors ON places.Id_sector = hall_sectors.Id_hall_sectors
+JOIN films ON sessions.Id_films = films.Id_films
+where date IN("2020-11-14", "2020-11-15", "2020-11-16", "2020-11-17", "2020-11-18")
+GROUP BY Name
+Order by count_tickets desc;
+
+#   Показать имена всех сотрудников квалификации 'Среднеквалифицированные'
+SELECT Qualification, GROUP_CONCAT(fullname) as name 
+FROM employees
+where Qualification = 'Среднеквалифицированные'
+GROUP BY Qualification;
+
+#   Показать названия всех фильмов для каждого жанра
+SELECT genre, GROUP_CONCAT(name) as name
+FROM films
+GROUP BY genre;
+
+#   Модификация
+#   Вывести для заданного фильма за 14 декабря все сеансы с залами и кинотеатрами (вся информация) 
+SELECT Date, time, Name as name_film, Name_cinema, number as hall_number
+FROM sessions
+JOIN halls ON sessions.Id_hall = sessions.Id_session
+JOIN films ON sessions.Id_films = films.Id_films
+JOIN cinemas ON halls.Id_cinema = cinemas.Id_cinemas
+where name = "Властелин колец: Братство Кольца" AND date = "2020-11-14";
+
+#   Для заданного сеанса определенного фильма в заданном зале и в заданном кинотеатре вывести состояние всех мест 
+SELECT distinct Place_№, Reservation, Id_booth_employee, date, time, Name as name_film, Format, Name_cinema, number as hall_number 
+FROM tickets
+JOIN places ON tickets.Id_place = places.Id_places
+JOIN sessions ON tickets.Id_session = sessions.Id_session
+JOIN films ON sessions.Id_films = films.Id_films
+JOIN halls ON sessions.Id_hall = sessions.Id_session
+JOIN cinemas ON halls.Id_cinema = cinemas.Id_cinemas
+WHERE date = "2020-11-14"  AND time = "12:30:00"  AND name = "Зеленая миля"  AND Format = "3D" AND number = 1  AND Name_cinema = "Киномакс";
+
+#   Для каждого сотрудника на кассе вывести сколько он заработал денег за период времени (сколько билетов продал и их суммарную цену)
+SELECT  Fullname, sum(price) as employee_profit, count(Id_tickets) as count_tickets
+FROM tickets
+JOIN sessions ON tickets.Id_session = sessions.Id_session
+JOIN places ON tickets.Id_place = places.Id_places
+JOIN hall_sectors ON places.Id_sector = hall_sectors.Id_hall_sectors
+JOIN booth_employees ON tickets.Id_booth_employee = booth_employees.Id_booth_employees
+JOIN employees ON booth_employees.Id_booth_employees = employees.Id_employee
+JOIN cinemas ON employees.Id_cinema = cinemas.id_cinemas
+where date IN("2020-11-14", "2020-11-15", "2020-11-16", "2020-11-17", "2020-11-18") AND Id_cinema = 1
+GROUP BY Fullname
+Order by employee_profit desc;
