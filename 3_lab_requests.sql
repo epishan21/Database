@@ -296,28 +296,36 @@ FROM places
 JOIN hall_sectors ON places.Id_sector = hall_sectors.Id_hall_sectors;
  
 #Вывод таблицы сотношения работников кассы к кассам
-SELECT Number as Number_booth, Fullname, Shedule, Qualification
+explain SELECT Number as Number_booth, Fullname, Shedule, Qualification
 FROM booth_employees
 JOIN employees ON booth_employees.Id_booth_employees = employees.Id_employee
 JOIN ticket_booths ON booth_employees.Id_booth = ticket_booths.Id_ticket_booths;
+
+
  
 #Вывод таблицы сотношения билетов к работникам кассы которые их продали 
-SELECT Id_tickets, Fullname, number as Number_booth, Name as Name_cinema
+explain SELECT Id_tickets, Fullname, number as Number_booth,  Name_cinema
 FROM tickets
 JOIN booth_employees ON tickets.Id_booth_employee = booth_employees.Id_booth_employees
 JOIN employees ON booth_employees.Id_booth_employees = employees.Id_employee
 JOIN ticket_booths ON booth_employees.Id_booth = ticket_booths.Id_ticket_booths
 JOIN cinemas ON employees.Id_cinema = cinemas.Id_cinemas;
 
+
 #Вывод таблицы сотношения работников кассы к работникам, кинотеатрам и номерам касс
-SELECT Fullname, Shedule, Qualification, number as Number_booth, Name as Name_cinema, address
+SELECT Fullname, Shedule, Qualification, number as Number_booth,  Name_cinema, address
 FROM booth_employees
 JOIN employees ON booth_employees.Id_booth_employees = employees.Id_employee
 JOIN ticket_booths ON booth_employees.Id_booth = ticket_booths.Id_ticket_booths
-JOIN cinemas ON employees.Id_cinema = cinemas.Id_cinemas;
+JOIN cinemas ON employees.Id_cinema = cinemas.Id_cinemas
+where number = 1;
+
+create index idx_employee_fullname on ticket_booths(number);
+
+drop index idx_employee_fullname on ticket_booths;
 
 #Вывод таблицы сотношения залов к времени уборки к уборщикам
-SELECT Number as Number_hall, day_of_week_of_cleaning, time_of_cleaning, Fullname, Name as Name_cinema
+SELECT Number as Number_hall, day_of_week_of_cleaning, time_of_cleaning, Fullname, Name_cinema
 FROM halls
 JOIN cleaners_to_halls ON halls.id_hall= cleaners_to_halls.id_cleaner
 JOIN cleaners ON cleaners_to_halls.id_cleaner = cleaners.id_cleaner
@@ -371,15 +379,11 @@ where f1.Length > ALL(
        AND f2.Length IS NOT NULL
        );
  
-
-
 #Расчитать для ряда среднюю стоимость
 SELECT Line_№, avg(Price) as avg_price 
 FROM places
 JOIN hall_sectors ON places.Id_sector = hall_sectors.Id_hall_sectors
 group by line_№;
- 
-
 
 #Транзакционные (задачи учета)
 #	Вывести список фильмов.
@@ -506,3 +510,224 @@ JOIN cinemas ON employees.Id_cinema = cinemas.id_cinemas
 where date IN("2020-11-14", "2020-11-15", "2020-11-16", "2020-11-17", "2020-11-18") AND Id_cinema = 1
 GROUP BY Fullname
 Order by employee_profit desc;
+
+#Процедуры
+
+#Показать фильмы заданной компании и посчитать их
+DELIMITER $$
+CREATE PROCEDURE Show_cmpany_films(IN company VARCHAR(45), OUT count_films INT)
+BEGIN
+    SELECT films.Name, Genre, Rating, Film_company
+	FROM films
+	WHERE Film_company = company;
+    
+    SELECT COUNT(Name) INTO count_films
+	FROM films
+	WHERE Film_company = company;
+END $$
+DELIMITER ;
+
+drop PROCEDURE Show_cmpany_films;
+
+CALL Show_cmpany_films('WB', @count_films);
+SELECT @count_films;
+
+#Показать билеты которые продали работники и их количество
+DELIMITER $$
+CREATE PROCEDURE Show_employee_tickets(IN employee VARCHAR(45), OUT count_tickets INT)
+BEGIN
+	SELECT Id_tickets, Fullname, number as Number_booth, Name_cinema
+	FROM tickets
+	JOIN booth_employees ON tickets.Id_booth_employee = booth_employees.Id_booth_employees
+	JOIN employees ON booth_employees.Id_booth_employees = employees.Id_employee
+	JOIN ticket_booths ON booth_employees.Id_booth = ticket_booths.Id_ticket_booths
+	JOIN cinemas ON employees.Id_cinema = cinemas.Id_cinemas
+    WHERE Fullname = employee;
+    
+	SELECT COUNT(Id_tickets) INTO count_tickets
+	FROM tickets
+	JOIN booth_employees ON tickets.Id_booth_employee = booth_employees.Id_booth_employees
+	JOIN employees ON booth_employees.Id_booth_employees = employees.Id_employee
+	JOIN ticket_booths ON booth_employees.Id_booth = ticket_booths.Id_ticket_booths
+	JOIN cinemas ON employees.Id_cinema = cinemas.Id_cinemas
+    WHERE Fullname = employee;
+END $$
+DELIMITER ;
+
+CALL Show_employee_tickets('Кравц Андрей', @count_tickets);
+SELECT @count_tickets;
+
+#Показать прибыль кинотеатра с одной даты по другую и вывести количество проданных билетов.
+DELIMITER $$
+CREATE PROCEDURE Show_cinema_profit(IN cinema_name VARCHAR(45), IN first_date date, IN last_date date, OUT count_tickets INT)
+BEGIN
+	SELECT sum(price) as cinema_profit
+	FROM tickets
+	JOIN sessions ON tickets.Id_session = sessions.Id_session
+	JOIN places ON tickets.Id_place = places.Id_places
+	JOIN hall_sectors ON places.Id_sector = hall_sectors.Id_hall_sectors
+    JOIN halls ON sessions.Id_hall = sessions.Id_session
+	JOIN cinemas ON halls.Id_cinema = cinemas.Id_cinemas
+	where date between first_date and last_date and Name_cinema = cinema_name;
+    
+	SELECT COUNT(Id_tickets) INTO count_tickets
+	FROM tickets
+	JOIN sessions ON tickets.Id_session = sessions.Id_session
+	JOIN places ON tickets.Id_place = places.Id_places
+	JOIN hall_sectors ON places.Id_sector = hall_sectors.Id_hall_sectors
+    JOIN halls ON sessions.Id_hall = sessions.Id_session
+	JOIN cinemas ON halls.Id_cinema = cinemas.Id_cinemas
+    where date between first_date and last_date and Name_cinema = cinema_name;
+END $$
+DELIMITER ;
+
+CALL Show_cinema_profit('Киномакс', "2020-11-14", "21-05-15", @count_tickets);
+SELECT @count_tickets;
+
+
+# Вывести для сотрудника на кассе сколько он заработал денег за период времени (сколько билетов продал и их суммарную цену)
+DELIMITER $$
+CREATE PROCEDURE Show_profit_emp(IN emp_name VARCHAR(45), IN first_date date, IN last_date date, OUT employee_profit INT)
+BEGIN
+	SELECT sum(price) INTO employee_profit
+	FROM tickets
+	JOIN sessions ON tickets.Id_session = sessions.Id_session
+	JOIN places ON tickets.Id_place = places.Id_places
+	JOIN hall_sectors ON places.Id_sector = hall_sectors.Id_hall_sectors
+	JOIN booth_employees ON tickets.Id_booth_employee = booth_employees.Id_booth_employees
+	JOIN employees ON booth_employees.Id_booth_employees = employees.Id_employee
+	JOIN cinemas ON employees.Id_cinema = cinemas.id_cinemas
+	where date between first_date and last_date and Fullname = emp_name
+	GROUP BY Fullname
+	Order by employee_profit desc;
+END $$
+DELIMITER ;
+
+drop PROCEDURE Show_profit_emp;
+
+CALL Show_profit_emp('Кравц Андрей', "2020-06-14", "2021-05-15", @employee_profit);
+SELECT @employee_profit;
+
+
+# Функции
+
+#	Показать количество проданных билетов на сеансы в определенную дату.
+DELIMITER $$
+CREATE FUNCTION Сalc_tickets_session(
+    date_ses date
+)
+RETURNS INT 
+DETERMINISTIC	
+BEGIN
+	DECLARE count INT;
+	SELECT COUNT(Id_tickets) 
+    INTO count
+	FROM tickets
+    JOIN sessions ON tickets.Id_session = sessions.Id_session
+    JOIN films ON sessions.Id_films = films.Id_films
+	where Date = date_ses
+	GROUP BY Date;
+RETURN count;
+END $$
+DELIMITER ;
+
+drop FUNCTION Сalc_tickets_session;
+
+SELECT Сalc_tickets_session( "2020-11-14" ) as count_ticket
+FROM tickets
+GROUP BY count_ticket;
+
+
+#Рассчитать кол-во сотрудников в кинотеатре, чья квалификации 'Среднеквалифицированные'
+DELIMITER $$
+CREATE FUNCTION Сalc_employee_qualification(
+    qua VARCHAR(45)
+)
+RETURNS INT 
+DETERMINISTIC	
+BEGIN
+	DECLARE count INT;
+	SELECT count(fullname)
+    INTO count
+	FROM employees
+	where Qualification = qua
+	GROUP BY Qualification;
+RETURN count;
+END $$
+DELIMITER ;
+
+drop FUNCTION Сalc_employee_qualification;
+
+SELECT Сalc_employee_qualification("Среднеквалифицированные") AS count_employee
+FROM employees
+GROUP BY count_employee;
+
+
+#Рассчитать кол-во сотрудников в кинотеатре 
+DELIMITER $$
+CREATE FUNCTION Сalc_count_employee(
+    cinema_name VARCHAR(45)
+)
+RETURNS INT 
+DETERMINISTIC	
+BEGIN
+	DECLARE count INT;
+	SELECT COUNT(id_employee)
+    INTO count
+	FROM employees
+	JOIN cinemas ON employees.Id_cinema = cinemas.Id_cinemas
+    WHERE Name_cinema = cinema_name;
+RETURN count;
+END $$
+DELIMITER ;
+
+SELECT Name_cinema AS cinema_name, Сalc_count_employee(Name_cinema) AS count_employee
+FROM cinemas
+ORDER BY count_employee DESC;
+
+
+# Представления
+#Вывод фильмов и их сеансов
+CREATE VIEW session_film
+AS
+SELECT Name, date, time, rating, genre
+FROM sessions
+JOIN films ON sessions.Id_films = films.Id_films;
+
+drop VIEW session_film;
+
+SELECT * FROM session_film;
+
+
+#Вывод таблицы уборки залов(временя и кто убирал)
+CREATE VIEW time_clean
+AS
+SELECT Number as Number_hall, day_of_week_of_cleaning, time_of_cleaning, Fullname, Name_cinema
+FROM halls
+JOIN cleaners_to_halls ON halls.id_hall= cleaners_to_halls.id_cleaner
+JOIN cleaners ON cleaners_to_halls.id_cleaner = cleaners.id_cleaner
+JOIN employees ON cleaners.Id_cleaner = employees.Id_employee
+JOIN cinemas ON employees.Id_cinema = cinemas.Id_cinemas;
+
+SELECT * FROM time_clean;
+
+#Вывод таблицы сотношения мест к их стоимости
+CREATE VIEW price_place
+AS
+SELECT Place_№, Line_№, Price 
+FROM places
+JOIN hall_sectors ON places.Id_sector = hall_sectors.Id_hall_sectors;
+
+SELECT * FROM price_place;
+
+#Вывод таблицы билетов и работников кассы которые их продали 
+CREATE VIEW tickets_empl
+AS
+SELECT Id_tickets, Fullname, number as Number_booth,  Name_cinema
+FROM tickets
+JOIN booth_employees ON tickets.Id_booth_employee = booth_employees.Id_booth_employees
+JOIN employees ON booth_employees.Id_booth_employees = employees.Id_employee
+JOIN ticket_booths ON booth_employees.Id_booth = ticket_booths.Id_ticket_booths
+JOIN cinemas ON employees.Id_cinema = cinemas.Id_cinemas;
+
+SELECT * FROM tickets_empl
