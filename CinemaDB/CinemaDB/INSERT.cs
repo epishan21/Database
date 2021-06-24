@@ -30,9 +30,9 @@ namespace CinemaDB
 
             MySqlCommand insertFilmCommand = new MySqlCommand("INSERT INTO films(Length, Genre, Rating, Name, Actors, Directors, Description, Film_company) VALUES(@Length, @Genre, @Rating, @Name, @Actors, @Directors, @Description, @Film_company);", connection);
 
-            insertFilmCommand.Parameters.AddWithValue("Length", Length_numeric.Text);       
+            insertFilmCommand.Parameters.AddWithValue("Length", Convert.ToInt32(Length_numeric.Text));       
             insertFilmCommand.Parameters.AddWithValue("Genre", Genre_textBox.Text);       
-            insertFilmCommand.Parameters.AddWithValue("Rating", Rating_numeric.Text);       
+            insertFilmCommand.Parameters.AddWithValue("Rating", Convert.ToDecimal(Rating_numeric.Text));       
             insertFilmCommand.Parameters.AddWithValue("Name", Name_textBox.Text);       
             insertFilmCommand.Parameters.AddWithValue("Actors", Actros_textBox.Text);       
             insertFilmCommand.Parameters.AddWithValue("Directors", Directors_textBox.Text);       

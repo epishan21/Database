@@ -43,9 +43,9 @@ namespace CinemaDB
 
                 while (sqlReader.Read())
                 {
-                    Length_numeric.Text = Convert.ToString(sqlReader["Length"]);
+                    Length_numeric.Value = Convert.ToInt32(sqlReader["Length"]);
                     Genre_textBox.Text = Convert.ToString(sqlReader["Genre"]);
-                    Rating_numeric.Text = Convert.ToString(sqlReader["Rating"]);
+                    Rating_numeric.Value = Convert.ToDecimal(sqlReader["Rating"]);
                     Name_textBox.Text = Convert.ToString(sqlReader["Name"]);
                     Actros_textBox.Text = Convert.ToString(sqlReader["Actors"]);
                     Directors_textBox.Text = Convert.ToString(sqlReader["Directors"]);
@@ -73,9 +73,9 @@ namespace CinemaDB
             MySqlCommand updateFilmCommand = new MySqlCommand("UPDATE films SET Length=@Length, Genre=@Genre, Rating=@Rating, Name=@Name, Actors=@Actors, Directors=@Directors, Description=@Description, Film_company=@Film_company WHERE id_films=@id", connection);
 
             updateFilmCommand.Parameters.AddWithValue("id", id);
-            updateFilmCommand.Parameters.AddWithValue("Length", Length_numeric.Text);
+            updateFilmCommand.Parameters.AddWithValue("Length", Convert.ToInt32(Length_numeric.Text));
             updateFilmCommand.Parameters.AddWithValue("Genre", Genre_textBox.Text);
-            updateFilmCommand.Parameters.AddWithValue("Rating", Rating_numeric.Text);
+            updateFilmCommand.Parameters.AddWithValue("Rating", Convert.ToDecimal(Rating_numeric.Text));
             updateFilmCommand.Parameters.AddWithValue("Name", Name_textBox.Text);
             updateFilmCommand.Parameters.AddWithValue("Actors", Actros_textBox.Text);
             updateFilmCommand.Parameters.AddWithValue("Directors", Directors_textBox.Text);
