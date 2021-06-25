@@ -37,18 +37,18 @@ namespace CinemaDB
         // Сохранить данные
         private void Save_btn_Click(object sender, EventArgs e)
         {
-            MySqlCommand updateFilmCommand = new MySqlCommand("UPDATE sessions JOIN films ON sessions.Id_films = films.Id_films JOIN halls ON sessions.Id_hall = halls.Id_hall SET Date=@Date, Time=@Time, Format=@Format, Number=@Number, Name=@Name WHERE id_session=@id;", connection);
+            MySqlCommand updateSESCommand = new MySqlCommand("UPDATE sessions JOIN films ON sessions.Id_session = films.Id_films JOIN halls ON sessions.Id_hall = halls.Id_hall SET Date=@Date, Time=@Time, Format=@Format, Number=@Number, Name=@Name WHERE id_session=@id;", connection);
 
-            updateFilmCommand.Parameters.AddWithValue("id", id);
-            updateFilmCommand.Parameters.AddWithValue("Date", Convert.ToDateTime(date.Text));
-            updateFilmCommand.Parameters.AddWithValue("Time", Time_box.Text);
-            updateFilmCommand.Parameters.AddWithValue("Format", Format_textBox.Text);
-            updateFilmCommand.Parameters.AddWithValue("Number", Hall_textBox.Text);
-            updateFilmCommand.Parameters.AddWithValue("Name", Film_textBox.Text);
+            updateSESCommand.Parameters.AddWithValue("id", id);
+            updateSESCommand.Parameters.AddWithValue("Date", Convert.ToDateTime(date.Text));
+            updateSESCommand.Parameters.AddWithValue("Time", Time_box.Text);
+            updateSESCommand.Parameters.AddWithValue("Format", Format_textBox.Text);
+            updateSESCommand.Parameters.AddWithValue("Number", Hall_textBox.Text);
+            updateSESCommand.Parameters.AddWithValue("Name", Film_textBox.Text);
 
             try
             {
-                updateFilmCommand.ExecuteNonQuery();
+                updateSESCommand.ExecuteNonQuery();
 
                 Close();
             }
@@ -63,13 +63,13 @@ namespace CinemaDB
         {
             MySqlDataReader sqlReader = null;
 
-            MySqlCommand getFilmInfoCommand = new MySqlCommand("SELECT Date, Time, Format, Number, Name FROM sessions JOIN films ON sessions.Id_films = films.Id_films JOIN halls ON sessions.Id_hall = halls.Id_hall WHERE id_session=@id;", connection);
+            MySqlCommand getSESInfoCommand = new MySqlCommand("SELECT Date, Time, Format, Number, Name FROM sessions JOIN films ON sessions.Id_session = films.Id_films JOIN halls ON sessions.Id_hall = halls.Id_hall WHERE id_session=@id;", connection);
 
-            getFilmInfoCommand.Parameters.AddWithValue("id", id);
+            getSESInfoCommand.Parameters.AddWithValue("id", id);
 
             try
             {
-                sqlReader = getFilmInfoCommand.ExecuteReader();
+                sqlReader = getSESInfoCommand.ExecuteReader();
 
                 while (sqlReader.Read())
                 {

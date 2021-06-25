@@ -15,7 +15,7 @@ namespace CinemaDB
 {
     public partial class Form1 : Form
     {
-        bool res;
+        int type;
 
         public Form1()
         {
@@ -31,7 +31,7 @@ namespace CinemaDB
             if(!(connection != null && connection.State != ConnectionState.Closed))
             connection.Open();
 
-            if (res == true)
+            if (type == 1)
             {
                 DataBase.Columns.Clear();
 
@@ -70,11 +70,9 @@ namespace CinemaDB
                 DataBase.Columns.Add("Киностудии");
                 DataBase.Columns[8].Width = 200;
 
-
-
                 LoadFilms();
             }
-            else if (res == false)
+            else if (type == 2)
             {
                 DataBase.Columns.Clear();
 
@@ -106,13 +104,36 @@ namespace CinemaDB
 
                 LoadFilms();
             }
+            else if (type == 3)
+            {
+            }
+            else if (type == 4)
+            {
+                DataBase.Columns.Clear();
+
+                // Показать сетку
+                DataBase.GridLines = true;
+
+                // Выделение целой строки при нажатии
+                DataBase.FullRowSelect = true;
+
+                DataBase.View = View.Details;
+
+                DataBase.Columns.Add("Жанр");
+                DataBase.Columns[0].Width = 250;
+
+                DataBase.Columns.Add("Средняя длина фильма");
+                DataBase.Columns[1].Width = 180;
+
+                LoadFilms();
+            }
         }
-        
+
         // Загрузить данные
         public void LoadFilms()
         {
             // Загрузить фильмы
-            if (res == true)
+            if (type == 1)
             {
                 MySqlDataReader sqlReader = null;
 
@@ -152,14 +173,12 @@ namespace CinemaDB
                 }
             }
             // Загрузить сеансы
-            else if (res == false)
+            else if (type == 2)
             {
                 MySqlDataReader sqlReader = null;
 
-                MySqlCommand getFilmsCommand = new MySqlCommand("SELECT Id_session, Date, Time, Format, Number, Name " +
-                    "FROM sessions " +
-                    "JOIN films ON sessions.Id_films = films.Id_films JOIN halls ON sessions.Id_hall = halls.Id_hall;", connection);
-                   
+                MySqlCommand getFilmsCommand = new MySqlCommand("SELECT Id_session, Date, Time, Format, Number, Name FROM sessions JOIN films ON sessions.Id_session = films.Id_films JOIN halls ON sessions.Id_hall = halls.Id_hall;", connection);
+
                 try
                 {
                     sqlReader = getFilmsCommand.ExecuteReader();
@@ -190,6 +209,42 @@ namespace CinemaDB
                     }
                 }
             }
+            else if (type == 3)
+            {
+            }
+            // Вывести среднюю длину фильма каждого жанра
+            else if (type == 4)
+            {
+                MySqlDataReader sqlReader = null;
+
+                MySqlCommand ShowTicketsCommand = new MySqlCommand("SELECT Genre, AVG(Length) AS Genre_Lenth FROM films GROUP BY Genre Order by Genre_Lenth desc; ", connection);
+
+                try
+                {
+                    sqlReader = ShowTicketsCommand.ExecuteReader();
+
+                    while (sqlReader.Read())
+                    {
+                        ListViewItem item = new ListViewItem(new string[] {
+                        Convert.ToString(sqlReader["Genre"]),
+                        Convert.ToString(sqlReader["Genre_Lenth"])
+                    });
+
+                        DataBase.Items.Add(item);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message, "Ошибка!", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+                finally
+                {
+                    if (sqlReader != null && !sqlReader.IsClosed)
+                    {
+                        sqlReader.Close();
+                    }
+                }
+            }
         }
 
         // Показать таблицу записей фильмов и работать с ней
@@ -197,10 +252,14 @@ namespace CinemaDB
         {
             DataBase.Items.Clear();
 
-            res = true;
+            type = 1;
 
             Films.Enabled = false;
             sessions.Enabled = true;
+            Insert_Button.Enabled = true;
+            Update_btn.Enabled = true;
+            toolStripButton5.Enabled = true;
+            Delete_StripButton.Enabled = true;
 
 
             Form1_Load();
@@ -212,10 +271,59 @@ namespace CinemaDB
 
             DataBase.Items.Clear();
 
-            res = false;
+            type = 2;
 
             sessions.Enabled = false;
             Films.Enabled = true;
+            Insert_Button.Enabled = true;
+            Update_btn.Enabled = true;
+            toolStripButton5.Enabled = true;
+            Delete_StripButton.Enabled = true;
+
+            Form1_Load();
+        }
+
+        // Показать количество проданных билетов за определенный период
+        private void Show_tickets_Click(object sender, EventArgs e)
+        {
+
+            DataBase.Items.Clear();
+
+            DataBase.Columns.Clear();
+
+            Films.Enabled = true;
+            sessions.Enabled = true;
+            Show_length.Enabled = true;
+            Insert_Button.Enabled = false;
+            Update_btn.Enabled = false;
+            toolStripButton5.Enabled = false;
+            Delete_StripButton.Enabled = false;
+
+            type = 3;
+
+            Form1_Load();
+
+            window_show_ticket show_tick = new window_show_ticket(connection);
+
+            show_tick.Show();
+
+        }
+
+        // Показать среднюю длину фильма для каждого жанра
+        private void Show_length_Click(object sender, EventArgs e)
+        {
+
+            DataBase.Items.Clear();
+
+            type = 4;
+
+            Films.Enabled = true;
+            sessions.Enabled = true;
+            Show_tickets.Enabled = true;
+            Insert_Button.Enabled = false;
+            Update_btn.Enabled = false;
+            toolStripButton5.Enabled = false;
+            Delete_StripButton.Enabled = false;
 
             Form1_Load();
         }
@@ -223,13 +331,13 @@ namespace CinemaDB
         // Добавление записи
         private void Insert_Button_Click(object sender, EventArgs e)
         {
-            if (res == true)
+            if (type == 1)
             {
                 INSERT insert = new INSERT(connection);
 
                 insert.Show();
             }
-            else if (res == false)
+            else if (type == 2)
             {
                 INSERT_SES insert_ses = new INSERT_SES(connection);
 
@@ -256,7 +364,7 @@ namespace CinemaDB
         private void Delete_StripButton_Click(object sender, EventArgs e)
         {
             // Удалить фильм
-            if (res == true)
+            if (type == 1)
             {
                 if (DataBase.SelectedItems.Count > 0)
                 {
@@ -288,7 +396,7 @@ namespace CinemaDB
                 }
             }
             // Удалить сеанс
-            else if (res == false)
+            else if (type == 2)
             {
                 if (DataBase.SelectedItems.Count > 0)
                 {
@@ -325,7 +433,7 @@ namespace CinemaDB
         private void Update_btn_Click(object sender, EventArgs e)
         {
             // Обновить фильм
-            if (res == true)
+            if (type == 1)
             {
                 if (DataBase.SelectedItems.Count > 0)
                 {
@@ -340,7 +448,7 @@ namespace CinemaDB
                 }
             }
             // Обновить сессию
-            else if (res == false)
+            else if (type == 2)
             {
                 if (DataBase.SelectedItems.Count > 0)
                 {
@@ -355,6 +463,8 @@ namespace CinemaDB
                 }
             }
         }
+
+
     }
 }
 

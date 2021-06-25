@@ -29,17 +29,17 @@ namespace CinemaDB
 
         private void insert_ses_btn_Click(object sender, EventArgs e)
         {
-            MySqlCommand insertFilmCommand = new MySqlCommand("INSERT INTO sessions(Date, Time, Format, Id_hall, Id_films) VALUES(@Date, @Time, @Format, @Id_hall, @Id_films);", connectionn);
+            MySqlCommand insertSESCommand = new MySqlCommand("INSERT INTO sessions(Date, Time, Format, Id_hall, Id_films) VALUES(@Date, @Time, @Format, @Id_hall, @Id_films);", connectionn);
 
-            insertFilmCommand.Parameters.AddWithValue("Date", date.Text);
-            insertFilmCommand.Parameters.AddWithValue("Time", Time_box.Text);
-            insertFilmCommand.Parameters.AddWithValue("Format", Format_textBox.Text);
-            insertFilmCommand.Parameters.AddWithValue("Id_hall", Hall_textBox.Text);
-            insertFilmCommand.Parameters.AddWithValue("Id_films", film_textBox.Text);
+            insertSESCommand.Parameters.AddWithValue("Date", date.Text);
+            insertSESCommand.Parameters.AddWithValue("Time", Time_box.Text);
+            insertSESCommand.Parameters.AddWithValue("Format", Format_textBox.Text);
+            insertSESCommand.Parameters.AddWithValue("Id_hall", Hall_textBox.Text);
+            insertSESCommand.Parameters.AddWithValue("Id_films", film_textBox.Text);
 
             try
             {
-                insertFilmCommand.ExecuteNonQuery();
+                insertSESCommand.ExecuteNonQuery();
 
                 Close();
 

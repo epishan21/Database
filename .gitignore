@@ -413,3 +413,5 @@ CinemaDB/CinemaDB/INSERT_SES.Designer.cs
 CinemaDB/CinemaDB/INSERT_SES.resx
 CinemaDB/CinemaDB/UPDATE_SES.Designer.cs
 CinemaDB/CinemaDB/UPDATE_SES.resx
+CinemaDB/CinemaDB/SHOW_TICKETS.Designer.cs
+CinemaDB/CinemaDB/SHOW_TICKETS.resx
