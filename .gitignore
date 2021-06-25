@@ -409,3 +409,7 @@ CinemaDB/CinemaDB/Properties/Settings.Designer.cs
 CinemaDB/CinemaDB/Properties/Settings.settings
 CinemaDB/CinemaDB/UPDATE.Designer.cs
 CinemaDB/CinemaDB/UPDATE.resx
+CinemaDB/CinemaDB/INSERT_SES.Designer.cs
+CinemaDB/CinemaDB/INSERT_SES.resx
+CinemaDB/CinemaDB/UPDATE_SES.Designer.cs
+CinemaDB/CinemaDB/UPDATE_SES.resx

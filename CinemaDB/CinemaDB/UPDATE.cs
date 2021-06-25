@@ -29,6 +29,7 @@ namespace CinemaDB
             this.id = id;
         }
 
+        // Отобразить данные
         private void UPDATE_Load(object sender, EventArgs e)
         {
             MySqlDataReader sqlReader = null;
@@ -68,6 +69,7 @@ namespace CinemaDB
 
         }
 
+        // Сохранить данные
         private void update_btn_Click(object sender, EventArgs e)
         {
             MySqlCommand updateFilmCommand = new MySqlCommand("UPDATE films SET Length=@Length, Genre=@Genre, Rating=@Rating, Name=@Name, Actors=@Actors, Directors=@Directors, Description=@Description, Film_company=@Film_company WHERE id_films=@id", connection);
@@ -95,6 +97,7 @@ namespace CinemaDB
         
         }
 
+        // Отмена
         private void cancel_bth_Click(object sender, EventArgs e)
         {
             Close();
